@@ -276,5 +276,116 @@ print(dim(df_predicciones))  # Debe ser: 720 filas x 2 columnas
 head(df_predicciones)
 
 
+# Visualización Comparativa de Métricas de KNN, SVM, XGBoost, RForest y LSTM
+# Crear un dataframe con los 3 tipos de métricas
+metrics_comp_df <- data.frame(
+  Algoritmo = rep(c("KNN", "SVM", "XGBoost", "Random Forest","LSTM"), each = 3 * 3),  # 3 variables x 3 métricas
+  Variable = rep(rep(c("Solar", "Eólica", "Carga"), each = 3), 5),  # Repetir por métrica
+  Metrica = rep(c("R2", "RMSE", "MAE"), times = 3 * 5),  # Cada métrica se repite
+  Valor = c(
+    # --- KNN ---
+    0.292213, 1556.813, 1101.061,
+    -0.9057994, 3953.569, 3243.733,
+    -0.228126, 4468.826, 3584.862,
+    
+    # --- SVM ---
+    0.503, 1304.703, 966.0549,
+    -0.698, 3731.805, 2952.332,
+    -0.334, 4657.628, 3913.831,
+    
+    # --- XGBoost ---
+    0.988, 201.488, 137.3568,
+    0.938134, 640.2372, 380.0813,
+    0.9765706, 563.9765, 408.3985,
+    
+    # --- Random Forest ---
+    0.9874289, 207.0849, 136.2464,
+    0.9433007, 612.9202, 338.676,
+    0.978751, 537.0936, 390.6469,
+    
+    # --- LSTM (sin ajustes) ---
+    0.9874289, 221.58, 149.82,
+    0, 0, 0,
+    0, 0, 0
+  )
+)
 
+# Visualización con ggplot2 agrupada por métrica
+library(ggplot2)
+
+ggplot(metrics_comp_df, aes(x = Variable, y = Valor, fill = Algoritmo)) +
+  geom_col(position = "dodge") +
+  facet_wrap(~Metrica, scales = "free_y") +
+  geom_hline(data = subset(metrics_comp_df, Metrica == "R2"), aes(yintercept = 0),
+             linetype = "dashed", color = "red") +
+  labs(
+    title = "Comparación de R², RMSE y MAE entre Algoritmos",
+    y = "Valor de la Métrica",
+    x = "Variable",
+    fill = "Algoritmo"
+  ) +
+  theme_minimal(base_size = 13)
+
+# DATOS COMPLETOS CON ETIQUETAS CORREGIDAS
+metrics_comp_df <- data.frame(
+  Algoritmo = rep(c("KNN", "SVM", "XGBoost", "Random Forest", "LSTM (sin ajustes)"), each = 9),  # 3 variables x 3 métricas
+  Variable = rep(rep(c("Solar", "Eólica", "Carga"), each = 3), times = 5),  # 3 repeticiones por métrica
+  Metrica = rep(c("R²", "RMSE", "MAE"), times = 15),  # 15 = 5 algoritmos x 3 variables
+  Valor = c(
+    # ---- KNN ----
+    0.292213, 1556.813, 1101.061,  # Solar
+    -0.9057994, 3953.569, 3243.733, # Eólica
+    -0.228126, 4468.826, 3584.862,  # Carga
+    
+    # ---- SVM ----
+    0.503, 1304.703, 966.0549,      # Solar
+    -0.698, 3731.805, 2952.332,     # Eólica
+    -0.334, 4657.628, 3913.831,     # Carga
+    
+    # ---- XGBoost ----
+    0.988, 201.488, 137.3568,       # Solar
+    0.938134, 640.2372, 380.0813,   # Eólica
+    0.9765706, 563.9765, 408.3985,  # Carga
+    
+    # ---- Random Forest ----
+    0.9874289, 207.0849, 136.2464,  # Solar
+    0.9433007, 612.9202, 338.676,   # Eólica
+    0.978751, 537.0936, 390.6469,   # Carga
+    
+    # ---- LSTM ----
+    0.9874289, 221.58, 149.82,      # Solar
+    0, 0, 0,                        # Eólica (datos faltantes)
+    0, 0, 0                         # Carga (datos faltantes)
+  )
+)
+
+# CORRECCIÓN DE ETIQUETAS
+metrics_comp_df$Variable <- factor(metrics_comp_df$Variable,
+                                   levels = c("Solar", "Eólica", "Carga"))
+
+# VISUALIZACIÓN MEJORADA
+library(ggplot2)
+
+ggplot(metrics_comp_df, aes(x = Variable, y = Valor, fill = Algoritmo)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+  facet_wrap(~Metrica, scales = "free_y", nrow = 1) +
+  geom_hline(data = subset(metrics_comp_df, Metrica == "R²"), 
+             aes(yintercept = 0), linetype = "dashed", color = "red") +
+  labs(
+    title = "Comparación de Métricas por Algoritmo y Variable",
+    subtitle = "R² (coeficiente de determinación), RMSE (Error Cuadrático Medio), MAE (Error Absoluto Medio)",
+    x = "Variable de Predicción",
+    y = "Valor de la Métrica",
+    fill = "Algoritmo:"
+  ) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "top",
+    axis.text.x = element_text(angle = 0, hjust = 0.5),
+    panel.spacing = unit(1.5, "lines"),
+    strip.text = element_text(face = "bold")
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  guides(fill = guide_legend(nrow = 1))
 
