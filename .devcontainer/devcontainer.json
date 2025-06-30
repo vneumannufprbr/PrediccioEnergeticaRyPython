@@ -1,0 +1,12 @@
+{
+  "name": "R Development Environment",
+  "image": "mcr.microsoft.com/devcontainers/r:latest",
+  "postCreateCommand": "R -e \"install.packages(c('tidyverse', 'lubridate', 'neuralnet'))\"",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "REditorSupport.r"
+      ]
+    }
+  }
+}
