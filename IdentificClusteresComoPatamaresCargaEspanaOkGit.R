@@ -11,7 +11,7 @@ library(factoextra)
 # ---
 # Paso 1: Cargar y preparar los datos
 # ---
-url1 <- "https://raw.githubusercontent.com/vneumannufprbr/TrabajosRStudio/main/energy_dataset.csv"
+url1 <- "https://raw.githubusercontent.com/vneumannufprbr/TrabajosRStudio/main/energy_dataset_ult.csv"
 energy_data<- read.csv(url1, stringsAsFactors = FALSE)
 
 demand_data <- energy_data %>%
