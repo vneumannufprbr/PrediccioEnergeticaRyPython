@@ -15,7 +15,6 @@ pacman::p_load(
 # --------------------------------------
 # (Igual que antes)
 url <- "https://raw.githubusercontent.com/vneumannufprbr/TrabajosRStudio/main/energy_dataset.csv"
-
 data <- read.csv(url, stringsAsFactors = FALSE) %>%
   mutate(time = ymd_hms(time)) %>%
   arrange(time) %>%
@@ -28,11 +27,11 @@ data <- read.csv(url, stringsAsFactors = FALSE) %>%
 # --------------------------------------
 # CONFIGURACIÓN DE PARÁMETROS
 # --------------------------------------
-# (Igual que antes)
 targets <- c("generation.solar", "generation.wind.onshore", "total.load.actual")
-window_size <- 168      # 7 días de ventana (24*7)
-test_size <- 30 * 24    # 30 días para evaluación
-forecast_horizon <- 30 * 24  # Pronóstico de 30 días (ajustable)
+# Parámetros del modelo
+window_size <- 24 # 24 horas, anterior 168 horas, Ventana de 7 días (24*7)
+test_size <- 48 # 48 horas porqué con 24 horas no es suficiente para el RF - anterior: 30 * 24, 30 días para evaluación
+forecast_horizon <- 24 # 24 horas, anterior: 30 * 24, 30 días para pronóstico futuro
 
 # --------------------------------------
 # FUNCIONES AUXILIARES
@@ -252,13 +251,15 @@ if(length(valid_results) > 0) {
       TRUE ~ variable
     ))
   
+  readline(prompt="GRÁFICO 1/3. Presiona [Enter] en la consola para continuar...")
+  
   # Visualización del Pronóstico
   print( # Asegurarse que el gráfico se imprima
     ggplot(forecast_df, aes(x = time, y = value, color = variable)) +
       geom_line(linewidth = 1) +
       facet_wrap(~variable, scales = "free_y", ncol = 1) +
       labs(
-        title = paste("Pronóstico a", forecast_horizon/24, "días usando Random Forest"),
+        title = paste("Pronóstico a", forecast_horizon/24, "día(s) usando Random Forest"),
         x = "Fecha",
         y = "Valor",
         color = "Variable"
@@ -282,12 +283,14 @@ if(length(valid_results) > 0) {
  metrics_comp_df <- data.frame(
    Algoritmo = rep(c("KNN", "SVM","XGBoost","Random Forest"), each = 3), # Asumiendo que tienes los de KNN/SVM/"XGBoost"
    Variable = rep(c("Solar", "Eólica", "Carga"), 4),
-   R2 = c( 0.292213, -0.9057994, -0.228126,  # Valores KNN (ejemplo)
-          0.503, -0.698, -0.334,  # Valores SVM (ejemplo)
-          0.988, 0.938134, 0.9765706,  # Valores XGBoost (ejemplo)
+   R2 = c( 0.292213, -0.9057994, -0.228126,  # Valores KNN para horizonte de 30 dias - Debes cambiar con tus resultados para 24 horas
+          0.503, -0.698, -0.334,  # Valores SVM para horizonte de 30 dias - Debes cambiar con tus resultados para 24 horas
+          0.988, 0.938134, 0.9765706,  # Valores XGBoost para horizonte de 30 dias - Debes cambiar con tus resultados para 24 horas
           metrics_rf_solar, metrics_rf_wind, metrics_rf_load) # Valores RF calculados
  )
 
+ readline(prompt="GRÁFICO 2/3. Presiona [Enter] en la consola para continuar...")
+ 
 # Graficar comparación (si tienes los datos de KNN/SVM)
  print(
      ggplot(metrics_comp_df, aes(x = Variable, y = R2, fill = Algoritmo)) +
@@ -309,30 +312,33 @@ if(length(valid_results) > 0) {
    Variable = rep(rep(c("Solar", "Eólica", "Carga"), each = 3), 4),  # Repetir por métrica
    Metrica = rep(c("R2", "RMSE", "MAE"), times = 3 * 4),  # Cada métrica se repite
    Valor = c(
-     # --- KNN ---
+     # --- KNN --- para horizonte de 30 dias - Debes cambiar con tus resultados para 24 horas
      0.292213, 1556.813, 1101.061,
      -0.9057994, 3953.569, 3243.733,
      -0.228126, 4468.826, 3584.862,
      
-     # --- SVM ---
+     # --- SVM --- para horizonte de 30 dias - Debes cambiar con tus resultados para 24 horas
      0.503, 1304.703, 966.0549,
      -0.698, 3731.805, 2952.332,
      -0.334, 4657.628, 3913.831,
      
-     # --- XGBoost ---
+     # --- XGBoost --- para horizonte de 30 dias - Debes cambiar con tus resultados para 24 horas
      0.988, 201.488, 137.3568,
      0.938134, 640.2372, 380.0813,
      0.9765706, 563.9765, 408.3985,
      
      # --- Random Forest (métricas reales) ---
-     metrics_rf_solar$R2,  metrics_rf_solar$RMSE,  metrics_rf_solar$MAE,
-     metrics_rf_wind$R2,   metrics_rf_wind$RMSE,   metrics_rf_wind$MAE,
-     metrics_rf_load$R2,   metrics_rf_load$RMSE,   metrics_rf_load$MAE
+     metrics_rf_solar$R2,  metrics_rf_solar$RMSE,  metrics_rf_solar$MAE, # Valores RF calculados
+     metrics_rf_wind$R2,   metrics_rf_wind$RMSE,   metrics_rf_wind$MAE,  # Valores RF calculados
+     metrics_rf_load$R2,   metrics_rf_load$RMSE,   metrics_rf_load$MAE   # Valores RF calculados
    )
  )
  
  # Visualización con ggplot2 agrupada por métrica
  library(ggplot2)
+ 
+ # PAUSA HASTA PRESIONAR ENTER
+ readline(prompt="GRÁFICO 3/3. Presiona [Enter] en la consola para continuar...")
  
  ggplot(metrics_comp_df, aes(x = Variable, y = Valor, fill = Algoritmo)) +
    geom_col(position = "dodge") +
@@ -346,4 +352,5 @@ if(length(valid_results) > 0) {
      fill = "Algoritmo"
    ) +
    theme_minimal(base_size = 13)
+ 
  
