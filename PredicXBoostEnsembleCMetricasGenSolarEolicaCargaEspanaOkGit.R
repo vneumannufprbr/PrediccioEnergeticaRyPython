@@ -27,9 +27,9 @@ data <- read.csv(url, stringsAsFactors = FALSE) %>%
 # CONFIGURACIÓN DE PARÁMETROS
 # --------------------------------------
 targets <- c("generation.solar", "generation.wind.onshore", "total.load.actual")
-window_size <- 168      # 7 días de ventana (24*7)
-test_size <- 30 * 24    # 30 días para evaluación
-forecast_horizon <- 30 * 24  # Pronóstico de 30 días (ajustable)
+window_size <- 24 # 24 horas, anterior 168 horas, Ventana de 7 días (24*7)
+test_size <- 48 # 48 horas porqué con 24 horas no es suficiente para el RF - anterior: 30 * 24, 30 días para evaluación
+forecast_horizon <- 24 # 24 horas, anterior: 30 * 24, 30 días para pronóstico futuro
 
 # --------------------------------------
 # FUNCIONES AUXILIARES
@@ -166,7 +166,7 @@ ggplot(forecast_df, aes(x = time, y = value, color = variable)) +
   geom_line(linewidth = 1) +
   facet_wrap(~variable, scales = "free_y", ncol = 1) +
   labs(
-    title = paste("Pronóstico a", forecast_horizon/24, "días usando XGBoost"),
+    title = paste("Pronóstico a", forecast_horizon/24, "día(s) usando XGBoost"),
     x = "Fecha",
     y = "Valor",
     color = "Variable"
@@ -177,8 +177,11 @@ ggplot(forecast_df, aes(x = time, y = value, color = variable)) +
 metrics_df <- data.frame(
   Algoritmo = rep(c("KNN", "SVM", "XGBoost"), each = 3),
   Variable = rep(c("Solar", "Eólica", "Carga"), 3),
-  R2 = c(0.292, -0.906, -0.228, 0.503, -0.698, -0.334, 0.988, 0.938, 0.977)
+  R2 = c(0.292, -0.906, -0.228, 0.503, -0.698, -0.334, 0.988, 0.938, 0.977) # para horizonte de 30 dias - Debes cambiar con tus resultados para 24 horas
 )
+
+# PAUSA HASTA PRESIONAR ENTER
+readline(prompt="GRÁFICO 2/2. Presiona [Enter] en la consola para continuar...")
 
 ggplot(metrics_df, aes(x = Variable, y = R2, fill = Algoritmo)) +
   geom_col(position = "dodge") +
